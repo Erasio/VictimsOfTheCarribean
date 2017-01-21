@@ -97,6 +97,17 @@ function Island:breakerDirections()
 	end
 end
 
+function Island:flush()
+	for k, player in ipairs(PlayerManager.players) do
+		for k, character in ipairs(player.characters) do
+			if character.q == self.ax and character.r == self.ay then
+				character.q = player.q
+				character.r = player.r
+			end
+		end
+	end
+end
+
 Bridge = {}
 Bridge.type = "Bridge"
 Bridge.list = {}
@@ -111,6 +122,7 @@ function Bridge:new(tile)
 	local newBridge = tile
 	setmetatable(newBridge, Bridge_mt)
 	newBridge.bridgeActive = false
+	newBridge.color = {0, 0, 255}
 
 	table.insert(Bridge.list, newBridge)
 
@@ -134,10 +146,11 @@ function Sandbank:new(tile)
 		return nil
 	end
 
-	local newSandbank = {}
+	local newSandbank = tile
 	setmetatable(newSandbank, Sandbank_mt)
 	newSandbank.bridgeActive = false
 	newSandbank.sandbankActive = false
+	newSandbank.color = {255, 255, 0}
 
 	table.insert(self.list, newSandbank)
 	return newSandbank
@@ -151,6 +164,31 @@ function Sandbank:draw()
 	else
 		-- TODO draw underwater sandbank
 	end
+end
+
+Startpoint = {}
+Startpoint.type = "Startpoint"
+Startpoint.list = {}
+Startpoint.sprite = {}
+Startpoint_mt = {__index = Startpoint}
+
+function Startpoint:new(tile)
+	if not tile then
+		return nil
+	end
+
+	local newStartpoint = tile
+	setmetatable(newStartpoint, Startpoint_mt)
+	newStartpoint.bridgeActive = false
+	newStartpoint.sandbankActive = false
+	newStartpoint.color = {255, 255, 0}
+
+	table.insert(self.list, newStartpoint)
+	return newStartpoint
+end
+
+function Startpoint:draw()
+	-- TODO draw startpoint
 end
 
 
@@ -185,12 +223,96 @@ function Map:new(radius, tileSize)
 		end
 	end
 
+
+	Startpoint:new(newMap:getTile(8, -5))
 	Island:new(newMap:getTile(6, -6), 4)
 	Island:new(newMap:getTile(6, -4), 2)
 	Island:new(newMap:getTile(6, -2), 4)
 	Island:new(newMap:getTile(4, -4), 2)
 	Island:new(newMap:getTile(4, -2), 2)
 	Island:new(newMap:getTile(2, -2), 0)
+	Sandbank:new(newMap:getTile(6, -5))
+	Sandbank:new(newMap:getTile(6, -3))
+	Sandbank:new(newMap:getTile(5, -5))
+	Sandbank:new(newMap:getTile(5, -2))
+	Bridge:new(newMap:getTile(7, -6))
+	Bridge:new(newMap:getTile(7, -5))
+	Bridge:new(newMap:getTile(7, -4))
+	Bridge:new(newMap:getTile(7, -3))
+	Bridge:new(newMap:getTile(5, -4))
+	Bridge:new(newMap:getTile(5, -3))
+	Bridge:new(newMap:getTile(4, -3))
+	Bridge:new(newMap:getTile(3, -3))
+	Bridge:new(newMap:getTile(3, -2))
+	Bridge:new(newMap:getTile(1, -1))
+
+
+	Startpoint:new(newMap:getTile(3, 5))
+	Island:new(newMap:getTile(0, 6), 4)
+	Island:new(newMap:getTile(4, 2), 2)
+	Island:new(newMap:getTile(2, 4), 4)
+	Island:new(newMap:getTile(0, 4), 2)
+	Island:new(newMap:getTile(2, 2), 2)
+	Island:new(newMap:getTile(0, 2), 0)
+	Sandbank:new(newMap:getTile(0, 5))
+	Sandbank:new(newMap:getTile(1, 5))
+	Sandbank:new(newMap:getTile(3, 3))
+	Sandbank:new(newMap:getTile(3, 2))
+	Bridge:new(newMap:getTile(4, 3))
+	Bridge:new(newMap:getTile(3, 4))
+	Bridge:new(newMap:getTile(2, 5))
+	Bridge:new(newMap:getTile(1, 6))
+	Bridge:new(newMap:getTile(1, 4))
+	Bridge:new(newMap:getTile(2, 3))
+	Bridge:new(newMap:getTile(1, 3))
+	Bridge:new(newMap:getTile(1, 2))
+	Bridge:new(newMap:getTile(0, 3))
+	Bridge:new(newMap:getTile(0, 1))
+
+
+	Startpoint:new(newMap:getTile(-8, 5))
+	Island:new(newMap:getTile(-4, 4), 2)
+	Island:new(newMap:getTile(-6, 2), 2)
+	Island:new(newMap:getTile(-6, 6), 4)
+	Island:new(newMap:getTile(-6, 4), 2)
+	Island:new(newMap:getTile(-4, 2), 4)
+	Island:new(newMap:getTile(-2, 2), 0)
+	Sandbank:new(newMap:getTile(-6, 5))
+	Sandbank:new(newMap:getTile(-5, 5))
+	Sandbank:new(newMap:getTile(-6, 3))
+	Sandbank:new(newMap:getTile(-5, 2))
+	Bridge:new(newMap:getTile(-5, 3))
+	Bridge:new(newMap:getTile(-5, 4))
+	Bridge:new(newMap:getTile(-4, 3))
+	Bridge:new(newMap:getTile(-3, 2))
+	Bridge:new(newMap:getTile(-3, 3))
+	Bridge:new(newMap:getTile(-1, 1))
+	Bridge:new(newMap:getTile(-7, 3))
+	Bridge:new(newMap:getTile(-7, 4))
+	Bridge:new(newMap:getTile(-7, 5))
+	Bridge:new(newMap:getTile(-7, 6))
+
+	Startpoint:new(newMap:getTile(-3, -5))
+	Island:new(newMap:getTile(-2, -4), 2)
+	Island:new(newMap:getTile(-4, -2), 4)
+	Island:new(newMap:getTile(-2, -2), 2)
+	Island:new(newMap:getTile(0, -6), 4)
+	Island:new(newMap:getTile(0, -4), 2)
+	Island:new(newMap:getTile(0, -2), 0)
+	Sandbank:new(newMap:getTile(-3, -3))
+	Sandbank:new(newMap:getTile(-3, -2))
+	Sandbank:new(newMap:getTile(-1, -5))
+	Sandbank:new(newMap:getTile(0, -5))
+	Bridge:new(newMap:getTile(-4, -3))
+	Bridge:new(newMap:getTile(-3, -4))
+	Bridge:new(newMap:getTile(-2, -5))
+	Bridge:new(newMap:getTile(-1, -6))
+	Bridge:new(newMap:getTile(-2, -3))
+	Bridge:new(newMap:getTile(-1, -4))
+	Bridge:new(newMap:getTile(1, -3))
+	Bridge:new(newMap:getTile(0, -3))
+	Bridge:new(newMap:getTile(-1, -2))
+	Bridge:new(newMap:getTile(0, -1))
 
 	return newMap
 end
@@ -205,9 +327,26 @@ function Map:draw()
 	end
 end
 
+function Map:wave(direction)
+	for k, bridge in ipairs(Bridge.list) do
+		bridge.bridgeActive = false
+	end
+	for k, isle in ipairs(Island.list) do
+		if not isle.blockers[direction] then
+			isle.flush()
+		end
+	end
+end
+
+function Map:hideSandbanks()
+	for k, v in ipairs(Sandbank.list) do
+		v.sandbankActive = false
+	end
+end
+
 function Map:getSpawnPoint(i)
-	print("TODO Map:getSpawnPoint")
-	return 8, -5
+	local tile = Startpoint.list[i]
+	return tile.ax, tile.ay
 end
 
 function Map:buildIsland(q, r, numBlockers)
