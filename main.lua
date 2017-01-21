@@ -8,10 +8,9 @@ function love.load()
 
 	require "tiles"
 	require "camera"
+	require "player"
 
-	myMap = Map:new()
-	myMap:buildIsland(0, 0, 3)
-	myMap:buildBridge(0, 1)
+	PlayerManager:startGame()
 end
 
 function love.update(dt)
@@ -35,10 +34,8 @@ end
 
 function love.draw()
 	camera:set()
-	for k, v in pairs(myMap.tiles) do
-		for l, tile in pairs(v) do
-			tile:draw()
-		end
+	if PlayerManager.map then
+		PlayerManager.map:draw()
 	end
 	if highlightedTile then
 		highlightedTile:draw()
@@ -55,6 +52,8 @@ function love.keypressed(key, scancode, isrepeat)
 		if highlightedTile then
 			print(highlightedTile.type)
 		end
+	elseif key == "g" then
+		PlayerManager:startGame()
 	end
 end
 
@@ -68,7 +67,7 @@ function updateMousePosition(x, y)
 	end
 	x = x * camera.scaleX + camera.x
 	y = y * camera.scaleY + camera.y 
-	local returnTile = myMap:pixel_to_tile(x, y)
+	--local returnTile = myMap:pixelToTile(x, y)
 	if not returnTile then
 		if highlightedTile then
 			highlightedTile.color = {255, 255, 255}

@@ -78,14 +78,29 @@ function Island:new(tile, numBlockers)
 
 	love.graphics.setCanvas()
 
+	newIsland.color = {255, 0, 0}
+
 	table.insert(Island.list, newIsland)
 
 	return newIsland
 end
 
+function Island:breakerDirections()
+	results = {}
+	for k, v in pairs(self.blockers) do
+		if v == false then
+			table.insert(results, k)
+		end
+	end
+	if #results >= 1 then
+		return results
+	end
+end
+
 Bridge = {}
 Bridge.type = "Bridge"
 Bridge.list = {}
+Bridge.sprite = {}
 setmetatable(Bridge, Tile_mt)
 Bridge_mt = {__index = Bridge}
 
@@ -95,15 +110,49 @@ function Bridge:new(tile)
 	end
 	local newBridge = tile
 	setmetatable(newBridge, Bridge_mt)
-
-	love.graphics.setCanvas(newBridge.canvas)
-	love.graphics.circle("fill", newBridge.size, newBridge.size, 15)
-	love.graphics.setCanvas()
+	newBridge.bridgeActive = false
 
 	table.insert(Bridge.list, newBridge)
 
 	return newBridge
 end
+
+function Bridge:draw()
+	if self.active then
+		-- TODO draw bridge
+	end
+end
+
+Sandbank = {}
+Sandbank.type = "Sandbank"
+Sandbank.list = {}
+Sandbank.sprite = {}
+Sandbank_mt = {__index = Sandbank}
+
+function Sandbank:new(tile)
+	if not tile then
+		return nil
+	end
+
+	local newSandbank = {}
+	setmetatable(newSandbank, Sandbank_mt)
+	newSandbank.bridgeActive = false
+	newSandbank.sandbankActive = false
+
+	table.insert(self.list, newSandbank)
+	return newSandbank
+end
+
+function Sandbank:draw()
+	if self.bridgeActive then
+		-- TODO draw bridge
+	elseif self.sandbankActive then
+		-- TODO draw sandbank
+	else
+		-- TODO draw underwater sandbank
+	end
+end
+
 
 Map = {}
 Map_mt = {__index = Map}
@@ -129,14 +178,36 @@ function Map:new(radius, tileSize)
 		for j = -radius, radius do
 			for k = -radius, radius do
 				if i + j + k == 0 then
-					local x, y = newMap:tile_to_pixel(i, j)
+					local x, y = newMap:tileToPixel(i, j)
 					newMap.tiles[i][j] = Tile:new(x, y, tileSize, i, j)
 				end
 			end
 		end
 	end
 
+	Island:new(newMap:getTile(6, -6), 4)
+	Island:new(newMap:getTile(6, -4), 2)
+	Island:new(newMap:getTile(6, -2), 4)
+	Island:new(newMap:getTile(4, -4), 2)
+	Island:new(newMap:getTile(4, -2), 2)
+	Island:new(newMap:getTile(2, -2), 0)
+
 	return newMap
+end
+
+function Map:draw()
+	if self.tiles then
+		for k, v in pairs(self.tiles) do
+			for l, tile in pairs(v) do
+				tile:draw(tostring(k) .. " " .. tostring(l))
+			end
+		end
+	end
+end
+
+function Map:getSpawnPoint(i)
+	print("TODO Map:getSpawnPoint")
+	return 8, -5
 end
 
 function Map:buildIsland(q, r, numBlockers)
@@ -147,10 +218,20 @@ function Map:buildBridge(q, r)
 	self.tiles[q][r] = Bridge:new(self.tiles[q][r])
 end
 
-function Map:pixeToTile(x, y)
+function Map:getTile(q, r)
+	if self.tiles then
+		if self.tiles[q] then
+			if self.tiles[q][r] then
+				return self.tiles[q][r]
+			end
+		end
+	end
+end
+
+function Map:pixelToTile(x, y)
     local q = (x * math.sqrt(3)/3 - y / 3) / self.tileSize
     local r = y * 2/3 / self.tileSize
-    local dx, dy = self:hex_round(q, r)
+    local dx, dy = self:hexRound(q, r)
     if self.tiles[dx] then
     	if self.tiles[dx][dy] then
     		return self.tiles[dx][dy]
@@ -159,7 +240,7 @@ function Map:pixeToTile(x, y)
 end
 
 function Map:hexRound(x, y)
-    return Map:cube_to_hex(Map:cube_round(Map:hex_to_cube(x, y)))
+    return Map:cubeToHex(Map:cubeRound(Map:hexToCube(x, y)))
 end
 
 function Map:tileToPixel(q, r)
@@ -195,6 +276,14 @@ function Map:cubeRound(x, y, z)
     end
 
     return rx, ry, rz
+end
+
+function Map:cube_add(x1, y1, z1, x2, y2, z2)
+	return x1 + x2, y1 + y2, z1 + z2
+end
+
+function Map:cube_distance(x1, y1, z1, x2, y2, z2)
+	return (math.abs(x1 - x2) + math.abs(y1 - y2) + math.abs(z1 - z2)) / 2
 end
 
 function round(num, numDecimalPlaces)
