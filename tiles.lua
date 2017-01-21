@@ -147,7 +147,7 @@ function Map:buildBridge(q, r)
 	self.tiles[q][r] = Bridge:new(self.tiles[q][r])
 end
 
-function Map:pixel_to_tile(x, y)
+function Map:pixeToTile(x, y)
     local q = (x * math.sqrt(3)/3 - y / 3) / self.tileSize
     local r = y * 2/3 / self.tileSize
     local dx, dy = self:hex_round(q, r)
@@ -158,26 +158,26 @@ function Map:pixel_to_tile(x, y)
     end
 end
 
-function Map:tile_to_pixel(q, r)
+function Map:hexRound(x, y)
+    return Map:cube_to_hex(Map:cube_round(Map:hex_to_cube(x, y)))
+end
+
+function Map:tileToPixel(q, r)
     x = self.tileSize * math.sqrt(3) * (q + r/2)
     y = self.tileSize * 3/2 * r
     return x, y
 end
 
-function Map:hex_round(x, y)
-    return Map:cube_to_hex(Map:cube_round(Map:hex_to_cube(x, y)))
-end
-
-function Map:hex_to_cube(x, y)
+function Map:hexToCube(x, y)
     return x, y, -x-y
 end
 
 
-function Map:cube_to_hex(x, y, z)
+function Map:cubeToHex(x, y, z)
     return x, y
 end
 
-function Map:cube_round(x, y, z)
+function Map:cubeRound(x, y, z)
     local rx = round(x)
     local ry = round(y)
     local rz = round(z)
