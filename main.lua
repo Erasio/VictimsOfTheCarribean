@@ -87,8 +87,8 @@ end
 
 function love.mousepressed(x, y, button, isTouch)
 	if not UIManager:mouseClickEvent(x, y) then
-		local clickTile = PlayerManager.map:pixelToTile(x, y)
-		print("Q: " .. tostring(clickTile.ax) .. ", R: " .. tostring(clickTile.ay))
+		local clickTile = PlayerManager.map:pixelToTile(camera:translateScreenSpace(x, y))
+		ActionSelector:tileClicked(clickTile)
 	end
 end
 

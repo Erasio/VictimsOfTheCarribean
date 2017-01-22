@@ -34,7 +34,7 @@ function MasterDie:checkForDuplicates(numbers)
 	return numbers
 end
 
-
+-- END MASTERDIE SECTION
 
 -- DIE SECTION
 
@@ -47,7 +47,7 @@ function Die:new(x, y)
 
 	newDie.images = {}
 	newDie:loadGraphics()
-	newDie.lastDisplay = 6
+	newDie.lastDisplay = newDie.images[1]
 
 	print(tostring(table.getn(newDie.images)))
 
@@ -155,13 +155,13 @@ function CharacterSelector:init()
 
 	self.boxX = 100
 	self.boxY = 0
-	self.boxWidth = 105
-	self.boxHeight = 50
+	self.boxWidth = 200 + 25
+	self.boxHeight = 60
 
-	self.charX = 80
+	self.charX = 105
 	self.charY = 5
-	self.charWidth = 20
-	self.charHeight = 40
+	self.charWidth = 50
+	self.charHeight = 50
 	self.charSpacing = 5
 
 	self.selectedChar = nil
@@ -170,18 +170,19 @@ function CharacterSelector:init()
 end
 
 function CharacterSelector:drawBox()
-	love.graphics.setColor(0, 255, 0, 255)
+	love.graphics.setColor(0, 0, 0, 255)
 	love.graphics.rectangle("fill", self.boxX, self.boxY, self.boxWidth, self.boxHeight)
 end
 
 function CharacterSelector:drawCharacter(character, num)
 	if character.selected then
-		love.graphics.setColor(255, 0, 0, 255)
+		love.graphics.setColor(255, 150, 150, 255)
 	else
-		love.graphics.setColor(0, 0, 255, 255)
+		love.graphics.setColor(255, 255, 255, 255)
 	end
-	character.selectorLoc = self.charX + num*(self.charWidth+self.charSpacing)
-	love.graphics.rectangle("fill", self.charX + num*(self.charWidth+self.charSpacing), self.charY, self.charWidth, self.charHeight)
+	character.selectorLoc = self.charX + (num - 1)*(self.charWidth+self.charSpacing)
+	love.graphics.draw(character.image, self.charX + (num - 1)*(self.charWidth+self.charSpacing), self.charY, 0, 0.25)
+	--love.graphics.rectangle("fill", self.charX + (num - 1)*(self.charWidth+self.charSpacing), self.charY, self.charWidth, self.charHeight)
 end
 
 function CharacterSelector:draw()
@@ -204,7 +205,7 @@ function CharacterSelector:update()
 	--print(tostring(table.getn(self.availableChars)))
 end
 
-function CharacterSelector.deselectAll()
+function CharacterSelector:deselectAll()
 	for i=1,4 do
 		if self.availableChars[i] then
 			self.availableChars[i].selected = false
@@ -253,6 +254,7 @@ function CharacterSelector:mouseClick(x, y)
 					end
 				end
 			end
+			ActionSelector:updateActiveButtons(selectedChar)
 		end
 	end
 
@@ -373,7 +375,7 @@ function CurrentPlayerImage:setPlayer(player)
 	if player then
 		self.image = player.portrait
 	else
-		self.image = love.graphics.newImage("empty.jpg")
+		self.image = love.graphics.newImage("img/spieler1_1.png")
 	end
 end
 
@@ -572,14 +574,14 @@ function PlayerOrderDisplay:init()
 
 	self.boxX = 0
 	self.boxY = height - 70
-	self.boxWidth = 310
+	self.boxWidth = 250
 	self.boxHeight = 120
 
 	self.imageX = 10
 	self.imageY = self.boxY + 10
 	self.imageWidth = 50
 	self.imageHeight = 50
-	self.imageSpacing = 30
+	self.imageSpacing = 10
 
 	self.displayThis = false
 end
@@ -648,17 +650,20 @@ function ActionSelector:init()
 
 	self.boxX = 0
 	self.boxY = 200
-	self.boxWidth = 100
-	self.boxHeight = 130
+	self.boxWidth = 70
+	self.boxHeight = 250
 
 	self.buttonX = 10
 	self.buttonY = 210
-	self.buttonWidth = 80
-	self.buttonHeight = 20
+	self.buttonWidth = 50
+	self.buttonHeight = 50
 	self.buttonSpacingY = 10
 
-	self.buttons = {self:createButton(1), self:createButton(2), self:createButton(3), self:createButton(4)}
+	self.buttons = {self:createButton(1, true), self:createButton(2, true), self:createButton(3, true), self:createButton(4, true)}
 	self.buttonImages = {}
+
+	self.currentAction = nil
+	self.validTiles = nil
 
 	self.displaySelector = false
 end
@@ -671,17 +676,74 @@ function ActionSelector:drawButtons()
 	end
 end
 
-function ActionSelector:createButton(num)
+function ActionSelector:updateActiveButtons(selectedChar)
+	for i=1,4 do
+		self.buttons[i].active = false
+	end
+
+	for i=1,5 do
+		if selectedChar:getPossibleActions()[i] then
+			if selectedChar:getPossibleActions()[i].name == "Build Bridge" then
+				self.buttons[1].active = true
+				self.buttons[1].action = selectedChar:getPossibleActions()[i]
+			elseif selectedChar:getPossibleActions()[i].name == "Build wave breaker" then
+				self.buttons[2].active = true
+				self.buttons[2].action = selectedChar:getPossibleActions()[i]
+			elseif selectedChar:getPossibleActions()[i].name == "Walk" then
+				self.buttons[3].active = true
+				self.buttons[3].action = selectedChar:getPossibleActions()[i]
+			else
+				self.buttons[4].active = true
+				self.buttons[4].action = selectedChar:getPossibleActions()[i]
+			end
+		end
+	end
+end
+	
+
+function ActionSelector:createButton(num, active)
 	local button = {}
 	button.x = self.buttonX
+	button.active = active
+	button.image = love.graphics.newImage("img/action_" .. tostring(num) .. ".png")
+	button.imageSel = love.graphics.newImage("img/action_" .. tostring(num) .. "_selected.png")
 	button.y = self.buttonY + (num-1) * (self.buttonHeight + self.buttonSpacingY)
 
 	return button
 end
 
 function ActionSelector:drawButton(button)
-	love.graphics.setColor(0, 0, 255, 255)
-	love.graphics.rectangle("fill", button.x, button.y, self.buttonWidth, self.buttonHeight)
+	if button.active then
+		love.graphics.setColor(255, 255, 255, 255)
+	else
+		love.graphics.setColor(140, 140, 140, 255)
+	end
+	if button.selected then
+		love.graphics.draw(button.imageSel, button.x, button.y, 0, 0.25)
+	else
+		love.graphics.draw(button.image, button.x, button.y, 0, 0.25)
+	end
+end
+
+function ActionSelector:tileClicked(tile)
+	if self.awaitingInput then
+		tileValid = false
+		for i=1,6 do
+			if tile == self.validTiles[i] then
+				tileValid = true
+				break
+			end
+		end
+
+		if tileValid then
+			self.currentAction.func(self.currentAction.callbackTable, tile)
+			self:hideStuff()
+			return nil
+		end
+		self.awaitingInput = false
+		UIManager.displayActionSelector()
+		Tile.unhighlihgtAll()
+	end
 end
 
 function ActionSelector:drawBox()
@@ -707,17 +769,31 @@ function ActionSelector:mouseClick(x, y)
 			local currBut = self.buttons[i]
 
 			if x >= currBut.x and x <= currBut.x + self.buttonWidth and y >= currBut.y and y <= currBut.y + self.buttonHeight then
-				self.displaySelector = false
 
-				if i == 4 then
-					CharacterSelector.selectedChar:sleep()
-					if table.getn(CharacterSelector.availableChars) <= 1 then
-						UIManager:hideActionSelector()
-						UIManager:hideCharacterSelector()
-						PlayerManager:nextPlayer()
-					end
+				if currBut.active then
+					
+					if currBut.action.name == "Build Bridge" then
+						availTiles = currBut.action.check(currBut.action.callbackTable)
+						self.awaitingInput = true
+						self.currentAction = currBut.action
+						self.validTiles = availTiles
+						print("bride")
+					elseif currBut.action.name == "Build wave breaker" then
+						availTiles = currBut.action.check(currBut.action.callbackTable)
+						self.awaitingInput = true
+						self.currentAction = currBut.action
+						self.validTiles = availTiles
+					elseif currBut.action.name == "Walk" then
+						availTiles = currBut.action.check(currBut.action.callbackTable)
+						self.awaitingInput = true
+						self.currentAction = currBut.action
+						self.validTiles = availTiles
+						print("walk")
+					else 
+						currBut.action.func(currBut.action.callbackTable)
+					end		--TODO Call Character Action
+					self:highLightTiles()
 				end
-				--TODO Call Character Action
 				break
 			end
 		end
@@ -728,6 +804,25 @@ function ActionSelector:mouseClick(x, y)
 		return true
 	end
 	return false
+end
+
+function ActionSelector:highLightTiles()
+	for i=1,6 do
+		if self.validTiles[i] then
+			self.validTiles[i]:highlight()
+		end
+	end
+end
+
+function ActionSelector:hideStuff()
+	print("hidden")
+	UIManager:hideActionSelector()
+	Tile.unhighlihgtAll()
+	if table.getn(CharacterSelector.availableChars) <= 1 then
+		UIManager:hideActionSelector()
+		UIManager:hideCharacterSelector()
+		PlayerManager:nextPlayer()
+	end	
 end
 
 -- END ACTIONSELECTOR SECTION

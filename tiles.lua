@@ -30,7 +30,7 @@ function Tile:draw(text)
 	love.graphics.draw(self.canvas, self.x - self.size, self.y - self.size)
 	if self.sprite then
 		if self.highlightBool then
-			print("hello?")
+			--print("hello?")
 			love.graphics.setColor(100, 255, 255)
 		else
 			love.graphics.setColor(255, 255, 255)
@@ -167,10 +167,12 @@ function Bridge:new(tile)
 	newBridge.walkToTiles = {}
 	for i = -1, 1 do
 		for j = -1, 1 do
-			local tile = Map.map:getTile(newBridge.ax + i, newBridge.ay + j)
-			if tile then
-				if tile.type == "Island" then
-					table.insert(newBridge.walkToTiles, tile)
+			if not (math.abs(i+j) >= 2) then
+				local tile = Map.map:getTile(newBridge.ax + i, newBridge.ay + j)
+				if tile then
+					if tile.type == "Island" or tile.type == "Goalpoint" then
+						table.insert(newBridge.walkToTiles, tile)
+					end
 				end
 			end
 		end
@@ -186,7 +188,7 @@ end
 function Bridge:draw()
 	if self.highlightBool then
 		love.graphics.setColor(100, 255, 255)
-		love.graphics.circle("fill", self.x, self.y, 20))
+		love.graphics.circle("fill", self.x, self.y, 20)
 	else
 		love.graphics.setColor(255, 255, 255)
 	end
@@ -215,10 +217,12 @@ function Sandbank:new(tile)
 	newSandbank.walkToTiles = {}
 	for i = -1, 1 do
 		for j = -1, 1 do
-			local tile = Map.map:getTile(newSandbank.ax + i, newSandbank.ay + j)
-			if tile then
-				if tile.type == "Island" then
-					table.insert(newSandbank.walkToTiles, tile)
+			if not (math.abs(i+j) >= 2) then
+				local tile = Map.map:getTile(newSandbank.ax + i, newSandbank.ay + j)
+				if tile then
+					if tile.type == "Island" then
+						table.insert(newSandbank.walkToTiles, tile)
+					end
 				end
 			end
 		end
@@ -278,11 +282,13 @@ function Startpoint:draw()
 end
 
 Goalpoint = {}
+Goalpoint_mt = {__index = Goalpoint}
 Goalpoint.type = "Goalpoint"
 setmetatable(Goalpoint, Tile_mt)
 
 function Goalpoint:new(tile)
 	local newGoalpoint = Island:new(tile, 0)
+	setmetatable(newGoalpoint, Goalpoint_mt)
 
 	return newGoalpoint
 end
@@ -451,7 +457,9 @@ function Map:wave(direction)
 	end
 	for k, isle in ipairs(Island.list) do
 		if not isle.blockers[direction] then
-			isle.flush()
+			if isle.type == "Island" then
+				isle:flush()
+			end
 		end
 	end
 end

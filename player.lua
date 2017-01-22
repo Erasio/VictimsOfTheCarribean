@@ -57,6 +57,10 @@ function PlayerManager:nextPlayer()
 		self.currentPlayerID = 1
 	end
 
+	for i=1,4 do
+		print("#",i,self.order[i])
+	end
+
 	print("Player #" .. tostring(self.currentPlayerID) .. " is playing")
 	CurrentPlayerImage:setPlayer(self.currentPlayer)
 	self.currentPlayer:startTurn()
@@ -72,7 +76,7 @@ function PlayerManager:preWave()
 end
 
 function PlayerManager:waveDirIsSet(dir)
-	--Implement Wave
+	PlayerManager.map:wave(dir)
 
 	self:nextRound()
 end
@@ -105,8 +109,11 @@ function Player:new(q, r, map, index)
 
 	newPlayer.portrait = love.graphics.newImage("img/spieler" .. tostring(index) .. "_1.png")
 
+	newPlayer.q = q
+	newPlayer.r = r
+
 	newPlayer.characters = {}
-	newPlayer.numCharacters = 4
+	newPlayer.numCharacters = 2
 	newPlayer.index = index
 	for i = 1, newPlayer.numCharacters do
 		table.insert(newPlayer.characters, Character:new(q, r, map, index, (200*0.3)/2 + (i-2) * 5, (200*0.3)/2 + (i-2) * 5))
@@ -162,14 +169,14 @@ function Character:new(q, r, map, id, dispX, dispY)
 	setmetatable(newCharacter, Character_mt)
 
 	tileX, tileY = PlayerManager.map:tileToPixel(q, r)
-	newCharacter.displayX = tileX - dispX
-	newCharacter.displayY = tileY - dispY
+	newCharacter.displayX = dispX
+	newCharacter.displayY = dispY
 	newCharacter.image = love.graphics.newImage("img/spieler" .. tostring(id) .. "_" .. tostring(math.random(4)) .. ".png")
 
 	newCharacter.q = q
 	newCharacter.r = r
 	newCharacter.map = map
-	newCharacter.actionsPerRound = 1
+	newCharacter.actionsPerRound = 15
 	newCharacter.currentActions = 1
 	newCharacter.portrait = {}
 	newCharacter.actions = {
@@ -183,12 +190,13 @@ function Character:new(q, r, map, id, dispX, dispY)
 end
 
 function Character:draw()
+	--print("char draw" , self.q, self.r)
 	x, y = PlayerManager.map:tileToPixel(self.q, self.r)
 
-	x = x + math.random(-5, 5)
-	y = y + math.random(-5, 5)
+	x = x -  self.displayX
+	y = y - self.displayY
 
-	love.graphics.draw(self.image, self.displayX, self.displayY, 0, 0.3)
+	love.graphics.draw(self.image, x, y, 0, 0.3)
 end
 
 
@@ -209,9 +217,11 @@ function Character:getSurroundingTiles()
 	local results = {}
 	for i = -1, 1 do
 		for j = -1, 1 do
-			local tile = self.map:getTile(self.q + i, self.r + j)
-			if tile then
-				table.insert(results, tile)
+			if not (math.abs(i+j) >= 2) then
+				local tile = self.map:getTile(self.q + i, self.r + j)
+				if tile then
+					table.insert(results, tile)
+				end
 			end
 		end
 	end
@@ -273,7 +283,7 @@ function Character:checkWalk()
 				if tile.walkToTiles then
 					for k, option in pairs(tile.walkToTiles) do
 						if option.ax ~= self.q or option.ay ~= self.r then
-							table.insert(results, tile)
+							table.insert(results, option)
 						end
 					end
 				end
@@ -285,10 +295,10 @@ function Character:checkWalk()
 	end
 end
 
-function Character:walk(newQ, newR)
+function Character:walk(tile)
 	self.currentActions = self.currentActions - 1
-	self.q = newQ
-	self.r = newR
+	self.q = tile.ax
+	self.r = tile.ay
 end
 
 function Character:checkSleep()
