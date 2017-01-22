@@ -1,7 +1,7 @@
 Time = {}
 Time.globalTime = 0
 Time.playTime = 0
-Time.isPlaying = false
+Time.isPlaying = true
 Time.globalDilation = 1
 Time.timelines = {}
 Time.timelineUID = 1
@@ -127,6 +127,8 @@ function Timeline:deactivate()
 end
 
 function Timeline:completed()
+    self.active = false
+    self.currentTime = 0
 end
 
 EventTimeline = {}

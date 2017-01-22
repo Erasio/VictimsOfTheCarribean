@@ -9,11 +9,28 @@ function love.load()
 	require "tiles"
 	require "camera"
 	require "player"
+	require "time"
+	require "UI"
 
+	love.window.setMode(1280, 720)
+
+	background = love.graphics.newImage("img/ocean_map.png")
+	tileGraphics = {}
+
+	table.insert(tileGraphics, love.graphics.newImage("img/tile_island_1.png"))
+	table.insert(tileGraphics, love.graphics.newImage("img/tile_sand_1.png"))
+	table.insert(tileGraphics, love.graphics.newImage("img/tile_sand_wasser_1.png"))
+	table.insert(tileGraphics, love.graphics.newImage("img/tile_bridge.png"))
+
+
+	UIManager:init()
 	PlayerManager:startGame()
 end
 
 function love.update(dt)
+	Time:update(dt)
+	UIManager:update()
+
 	if love.keyboard.isDown("a") then
 		camera:move(-50 * dt * camera.scaleX, 0)
 		updateMousePosition(love.mouse.getPosition())
@@ -34,13 +51,20 @@ end
 
 function love.draw()
 	camera:set()
+	local x, y = PlayerManager.map:tileToPixel(0, 0)
+	love.graphics.draw(background, x - 1000, y - 1000)
 	if PlayerManager.map then
 		PlayerManager.map:draw()
 	end
 	if highlightedTile then
 		highlightedTile:draw()
 	end
+	if PlayerManager.initDone then
+		PlayerManager:draw()
+	end
 	camera:unset()
+
+	UIManager:draw()
 end
 
 function love.keypressed(key, scancode, isrepeat)
@@ -61,13 +85,21 @@ function love.mousemoved( x, y, dx, dy, istouch )
 	updateMousePosition(x, y)
 end
 
+function love.mousepressed(x, y, button, isTouch)
+	if not UIManager:mouseClickEvent(x, y) then
+		local clickTile = PlayerManager.map:pixelToTile(x, y)
+		print("Q: " .. tostring(clickTile.ax) .. ", R: " .. tostring(clickTile.ay))
+	end
+end
+
 function updateMousePosition(x, y)
 	if x == nil or y == nil then
+		print("nil")
 		return 
 	end
 	x = x * camera.scaleX + camera.x
 	y = y * camera.scaleY + camera.y 
-	--local returnTile = myMap:pixelToTile(x, y)
+	--local returnTile = PlayerManager.map:pixelToTile(x, y)
 	if not returnTile then
 		if highlightedTile then
 			highlightedTile.color = {255, 255, 255}

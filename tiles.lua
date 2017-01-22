@@ -5,6 +5,7 @@ Tile_mt = {__index = Tile}
 function Tile:new(x, y, size, ax, ay)
 	local newTile = {}
 	setmetatable(newTile, Tile_mt)
+
 	newTile.x = x or 0
 	newTile.y = y or 0
 	newTile.ax = ax
@@ -27,12 +28,28 @@ function Tile:draw(text)
 	love.graphics.setColor(self.color)
 	love.graphics.draw(self.canvas, self.x - self.size, self.y - self.size)
 	if self.sprite then
-		love.graphics.setColor(255, 255, 255)
-		love.graphics.draw(self.sprite, self.x, self.y)
+		love.graphics.setColor(255, 255, 255, 255)
+		love.graphics.draw(self.sprite, self.x - 50, self.y - 50, 0, 0.5)
 	end
 	if text then
 		love.graphics.print(text, self.x, self.y)
 	end
+
+	
+
+	-- love.graphics.setColor(255, 255, 255, 255)
+
+	-- if self.type == "Island" then
+	-- 	love.graphics.draw(tileGraphics[1], self.x - 50, self.y - 50, 0.523599, 0.5)
+	-- elseif self.type == "Sandbank" then
+	-- 	if self.sandbankActive then
+	-- 		love.graphics.draw(tileGraphics[2], self.x, self.y, 0, 0.5)
+	-- 	else 
+	-- 		love.graphics.draw(tileGraphics[3], self.x, self.y, 0, 0.5)
+	-- 	end
+	-- elseif self.type == "Bridge" then
+	-- 	love.graphics.draw(tileGraphics[4], self.x, self.y0, 0.5)
+	-- end
 end
 
 function Tile:corner(x, y, size, i)
@@ -80,6 +97,8 @@ function Island:new(tile, numBlockers)
 
 	newIsland.color = {255, 0, 0}
 
+	newIsland.sprite = tileGraphics[1]
+
 	table.insert(Island.list, newIsland)
 
 	return newIsland
@@ -124,6 +143,8 @@ function Bridge:new(tile)
 	newBridge.bridgeActive = false
 	newBridge.color = {0, 0, 255}
 
+	newBridge.sprite = tileGraphics[4]
+
 	table.insert(Bridge.list, newBridge)
 
 	return newBridge
@@ -159,10 +180,14 @@ end
 function Sandbank:draw()
 	if self.bridgeActive then
 		-- TODO draw bridge
+		love.graphics.draw(tileGraphics[4], self.x - 50, self.y - 50, 0, 0.5)
+
 	elseif self.sandbankActive then
 		-- TODO draw sandbank
+		love.graphics.draw(tileGraphics[2], self.x - 50, self.y - 50, 0, 0.5)
 	else
 		-- TODO draw underwater sandbank
+		love.graphics.draw(tileGraphics[3], self.x - 50, self.y - 50, 0, 0.5)
 	end
 end
 

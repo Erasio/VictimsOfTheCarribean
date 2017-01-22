@@ -9,43 +9,107 @@ function PlayerManager:startGame(numPlayers)
 		numPlayers = 2
 	end
 	print("Debugging! PlayerManager:startGame numPlayers hardcoded to 1!")
-	numPlayers = 1
+	numPlayers = 4
 	self.map = Map:new()
 	self.players = {}
 	for i = 1, numPlayers do
 		local spawnX, spawnY = self.map:getSpawnPoint(i)
+		local index = i
 		self.players[i] = Player:new(spawnX, spawnY, self.map, index)
+		print("Player #" .. tostring(i) .. " has index " .. tostring(i) .. " in self.players")
 	end
 
-	self:rollDie()
+	self.order = self.players
 
+	--NO TOUCHIES
+	self:rollDice()
+
+	self.initDone = true
+
+	--self:nextPlayer()
+end
+
+function PlayerManager:draw()
+	for i=1,4 do
+		if self.players[i] then
+			self.players[i]:draw()
+		end
+	end
+end
+
+
+--CHANGED BY YOGURT ### NO TOUCHIES ###
+function PlayerManager:nextPlayer()
+	if self.currentPlayer then
+		if self.currentPlayerID then
+			if self.currentPlayerID == 4 then
+				self:preWave()
+				--self:nextRound()
+				return nil
+			else
+				self.currentPlayerID = self.currentPlayerID + 1
+				--self.currentPlayer = self.order[self.currentPlayerID]
+				self.currentPlayer = self.players[self.order[self.currentPlayerID]]
+			end
+		end
+	else
+		self.currentPlayer = self.players[self.order[1]]
+		self.currentPlayerID = 1
+	end
+
+	print("Player #" .. tostring(self.currentPlayerID) .. " is playing")
+	CurrentPlayerImage:setPlayer(self.currentPlayer)
+	self.currentPlayer:startTurn()
+end
+
+function PlayerManager:preWave()
+	if WaveInfoImage:isWaveComing() then
+		CurrentPlayerImage:setPlayer(self.players[self.order[1]])
+		UIManager:unlockWaveButton()
+	else 
+		self:nextRound()
+	end
+end
+
+function PlayerManager:waveDirIsSet(dir)
+	--Implement Wave
+
+	self:nextRound()
+end
+
+--ADDED BY YOGURT
+function PlayerManager:nextRound()
+	self.currentPlayer = nil
+	OrderSelector:reset()
+	self:rollDice()
+end
+
+--CHANGED BY YOGURT ### NO TOUCHIES ###
+function PlayerManager:rollDice()
+	UIManager.rollDice()
+end
+
+--ADDED BY YOGURT ### NO TOUCHIES ###
+function PlayerManager:updateInc(order)
+	self.order = order
 	self:nextPlayer()
 end
 
-function PlayerManager:nextPlayer()
-	if self.order[1] then
-		self.currentPlayer = self.order[1]
-	else
-		self:rollDie()
-		self.currentPlayer = self.order[1]
-	end
-end
-
-function PlayerManager:rollDie()
-	print("TODO PlayerManager:rollDie and set PlayerManager.order")
-	self.order = self.players
-end
 
 Player = {}
 Player_mt = {__index = Player}
 
 function Player:new(q, r, map, index)
 	local newPlayer = {}
+	setmetatable(newPlayer, Player_mt)
+
+	newPlayer.portrait = love.graphics.newImage("img/spieler" .. tostring(index) .. "_1.png")
+
 	newPlayer.characters = {}
-	newPlayer.numCharacters = 4
+	newPlayer.numCharacters = 1
 	newPlayer.index = index
 	for i = 1, newPlayer.numCharacters do
-		table.insert(newPlayer.characters, Character:new(q, r, map))
+		table.insert(newPlayer.characters, Character:new(q, r, map, index, (200*0.3)/2 + (i-2) * 5, (200*0.3)/2 + (i-2) * 5))
 	end
 
 	newPlayer.currentCharacter = newPlayer.characters[1]
@@ -55,6 +119,7 @@ end
 
 function Player:getAvailableCharacters()
 	local results = {}
+	--print("CurrPlayer CharAmnt: " .. tostring(table.getn(self.c)))
 	for k, character in ipairs(self.characters) do
 		if character.currentActions > 0 then
 			table.insert(results, character)
@@ -63,19 +128,44 @@ function Player:getAvailableCharacters()
 	if #results >= 1 then
 		return results
 	else
-		PlayerManager:nextPlayer()
-		return self:getAvailableCharacters()
+		--PlayerManager:nextPlayer()
+		return {}
 	end
+end
+
+function Player:draw()
+	for i=1,4 do
+		if self.characters[i] then
+			self.characters[i]:draw()
+		end
+	end
+end
+
+--ADDED BY YOGURT
+function Player:startTurn()
+	for i=1,self.numCharacters do
+		if self.characters[i] then
+			self.characters[i].currentActions = 1
+			self.characters[i].selected = false
+		end
+	end
+	UIManager.displayCharacterSelector()
 end
 
 
 Character = {}
 Character_mt = {__index = Character}
 
-function Character:new(q, r, map)
+function Character:new(q, r, map, id, dispX, dispY)
 	print("New character at " .. tostring(q) .. " - " .. tostring(r))
 	local newCharacter = {}
 	setmetatable(newCharacter, Character_mt)
+
+	tileX, tileY = PlayerManager.map:tileToPixel(q, r)
+	newCharacter.displayX = tileX - dispX
+	newCharacter.displayY = tileY - dispY
+	newCharacter.image = love.graphics.newImage("img/spieler" .. tostring(id) .. "_" .. tostring(math.random(4)) .. ".png")
+
 	newCharacter.q = q
 	newCharacter.r = r
 	newCharacter.map = map
@@ -85,11 +175,22 @@ function Character:new(q, r, map)
 	newCharacter.actions = {
 		CharacterAction:new("Build Bridge", newCharacter, newCharacter.buildBridge, newCharacter.checkBuildBridge),
 		CharacterAction:new("Build wave breaker", newCharacter, newCharacter.buildBreaker, newCharacter.checkBuildBreaker),
-		CharacterAction:new("Walk", newCharacter, newCharacter.walk, newCharacter.checkWalk)
+		CharacterAction:new("Walk", newCharacter, newCharacter.walk, newCharacter.checkWalk),
+		CharacterAction:new("Sleep", newCharacter, newCharacter.sleep, nil)
 	}
 
 	return newCharacter
 end
+
+function Character:draw()
+	x, y = PlayerManager.map:tileToPixel(self.q, self.r)
+
+	x = x + math.random(-5, 5)
+	y = y + math.random(-5, 5)
+
+	love.graphics.draw(self.image, self.displayX, self.displayY, 0, 0.3)
+end
+
 
 function Character:getPossibleActions()
 	local results = {}
@@ -151,6 +252,10 @@ function Character:checkWalk()
 end
 
 function Character:walk()
+	self.currentActions = self.currentActions - 1
+end
+
+function Character:sleep()
 	self.currentActions = self.currentActions - 1
 end
 
