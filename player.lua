@@ -220,39 +220,62 @@ end
 
 function Character:checkBuildBridge()
 	local tiles = self:getSurroundingTiles()
+	local possibleTiles = {}
 	for k, tile in ipairs(tiles) do
 		if tile.type == "Bridge" or tile.type == "Sandbank" then
 			if not tile.bridgeActive then
-				return true
+				table.insert(possibleTiles, tile)
 			end
 		end
 	end
-	return false
+	if #possibleTiles >= 1 then
+		return possibleTiles
+	end
 end
 
-function Character:buildBridge(x, y)
+function Character:buildBridge(tile)
 	self.currentActions = self.currentActions - 1
-
+	if tile.type == "Bridge" or tile.type == "Sandbank" then
+		tile.bridgeActive = true
+	end
 end
 
 function Character:checkBuildBreaker()
 	local tile = self.map:getTile(self.q, self.r)
-	if tile.breakerDirections then
-		return true
-	end
-	return false
+	return tile.breakerDirections()
 end
 
-function Character:buildBreaker()
+function Character:buildBreaker(direction)
 	self.currentActions = self.currentActions - 1
+	local tile = Map:getTile(self.q, self.r)
+	tile:addBreaker(direction)
 end
 
 function Character:checkWalk()
-
+	local surrounding = self:getSurroundingTiles()
+	local results = {}
+	for k, tile in pairs(surrounding) do
+		if tile.type == "Bridge" then
+			if tile.bridgeActive then
+				if tile.walkToTiles then
+					for k, option in pairs(tile.walkToTiles) do
+						if option.ax ~= self.q or option.ay ~= self.r then
+							table.insert(results, tile)
+						end
+					end
+				end
+			end
+		end
+	end
+	if #results >= 1 then
+		return results
+	end
 end
 
-function Character:walk()
+function Character:walk(newQ, newR)
 	self.currentActions = self.currentActions - 1
+	self.q = newQ
+	self.r = newR
 end
 
 function Character:sleep()

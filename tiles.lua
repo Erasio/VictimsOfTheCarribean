@@ -104,6 +104,10 @@ function Island:new(tile, numBlockers)
 	return newIsland
 end
 
+function Island:addBreaker(direction)
+	self.blockers[direction] = true
+end
+
 function Island:breakerDirections()
 	results = {}
 	for k, v in pairs(self.blockers) do
@@ -142,6 +146,17 @@ function Bridge:new(tile)
 	setmetatable(newBridge, Bridge_mt)
 	newBridge.bridgeActive = false
 	newBridge.color = {0, 0, 255}
+	newBridge.walkToTiles = {}
+	for i = -1, 1 do
+		for j = -1, 1 do
+			local tile = Map.map:getTile(newBridge.ax + i, newBridge.ay + j)
+			if tile then
+				if tile.type == "Island" then
+					table.insert(newBridge.walkToTiles, tile)
+				end
+			end
+		end
+	end
 
 	newBridge.sprite = tileGraphics[4]
 
@@ -172,6 +187,17 @@ function Sandbank:new(tile)
 	newSandbank.bridgeActive = false
 	newSandbank.sandbankActive = false
 	newSandbank.color = {255, 255, 0}
+	newSandbank.walkToTiles = {}
+	for i = -1, 1 do
+		for j = -1, 1 do
+			local tile = Map.map:getTile(newSandbank.ax + i, newSandbank.ay + j)
+			if tile then
+				if tile.type == "Island" then
+					table.insert(newSandbank.walkToTiles, tile)
+				end
+			end
+		end
+	end
 
 	table.insert(self.list, newSandbank)
 	return newSandbank
@@ -207,9 +233,13 @@ function Startpoint:new(tile)
 	newStartpoint.bridgeActive = false
 	newStartpoint.sandbankActive = false
 	newStartpoint.color = {255, 255, 0}
-
+	newStartpoint.reachableBridges = {}
 	table.insert(self.list, newStartpoint)
 	return newStartpoint
+end
+
+function Startpoint:addReachableBridge(tile)
+	table.insert(self.reachableBridges, tile)
 end
 
 function Startpoint:draw()
@@ -218,6 +248,7 @@ end
 
 
 Map = {}
+Map.map = {}
 Map_mt = {__index = Map}
 
 function Map:new(radius, tileSize)
@@ -248,8 +279,10 @@ function Map:new(radius, tileSize)
 		end
 	end
 
+	Map.map = newMap
 
-	Startpoint:new(newMap:getTile(8, -5))
+	local tempStartPoint = {}
+	tempStartPoint = Startpoint:new(newMap:getTile(8, -5))
 	Island:new(newMap:getTile(6, -6), 4)
 	Island:new(newMap:getTile(6, -4), 2)
 	Island:new(newMap:getTile(6, -2), 4)
@@ -270,9 +303,13 @@ function Map:new(radius, tileSize)
 	Bridge:new(newMap:getTile(3, -3))
 	Bridge:new(newMap:getTile(3, -2))
 	Bridge:new(newMap:getTile(1, -1))
+	tempStartPoint:addReachableBridge(newMap:getTile(7, -6))
+	tempStartPoint:addReachableBridge(newMap:getTile(7, -5))
+	tempStartPoint:addReachableBridge(newMap:getTile(7, -4))
+	tempStartPoint:addReachableBridge(newMap:getTile(7, -3))
 
 
-	Startpoint:new(newMap:getTile(3, 5))
+	tempStartPoint = Startpoint:new(newMap:getTile(3, 5))
 	Island:new(newMap:getTile(0, 6), 4)
 	Island:new(newMap:getTile(4, 2), 2)
 	Island:new(newMap:getTile(2, 4), 4)
@@ -293,9 +330,13 @@ function Map:new(radius, tileSize)
 	Bridge:new(newMap:getTile(1, 2))
 	Bridge:new(newMap:getTile(0, 3))
 	Bridge:new(newMap:getTile(0, 1))
+	tempStartPoint:addReachableBridge(newMap:getTile(4, 3))
+	tempStartPoint:addReachableBridge(newMap:getTile(3, 4))
+	tempStartPoint:addReachableBridge(newMap:getTile(2, 5))
+	tempStartPoint:addReachableBridge(newMap:getTile(1, 6))
 
 
-	Startpoint:new(newMap:getTile(-8, 5))
+	tempStartPoint = Startpoint:new(newMap:getTile(-8, 5))
 	Island:new(newMap:getTile(-4, 4), 2)
 	Island:new(newMap:getTile(-6, 2), 2)
 	Island:new(newMap:getTile(-6, 6), 4)
@@ -316,8 +357,12 @@ function Map:new(radius, tileSize)
 	Bridge:new(newMap:getTile(-7, 4))
 	Bridge:new(newMap:getTile(-7, 5))
 	Bridge:new(newMap:getTile(-7, 6))
+	tempStartPoint:addReachableBridge(newMap:getTile(-7, 6))
+	tempStartPoint:addReachableBridge(newMap:getTile(-7, 5))
+	tempStartPoint:addReachableBridge(newMap:getTile(-7, 4))
+	tempStartPoint:addReachableBridge(newMap:getTile(-7, 3))
 
-	Startpoint:new(newMap:getTile(-3, -5))
+	tempStartPoint = Startpoint:new(newMap:getTile(-3, -5))
 	Island:new(newMap:getTile(-2, -4), 2)
 	Island:new(newMap:getTile(-4, -2), 4)
 	Island:new(newMap:getTile(-2, -2), 2)
@@ -338,6 +383,10 @@ function Map:new(radius, tileSize)
 	Bridge:new(newMap:getTile(0, -3))
 	Bridge:new(newMap:getTile(-1, -2))
 	Bridge:new(newMap:getTile(0, -1))
+	tempStartPoint:addReachableBridge(newMap:getTile(-4, -3))
+	tempStartPoint:addReachableBridge(newMap:getTile(-3, -4))
+	tempStartPoint:addReachableBridge(newMap:getTile(-2, -5))
+	tempStartPoint:addReachableBridge(newMap:getTile(-1, -6))
 
 	return newMap
 end
