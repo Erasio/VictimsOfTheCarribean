@@ -215,6 +215,17 @@ function Character:getSurroundingTiles()
 			end
 		end
 	end
+	local dfa = self.map:getTile(self.q, self.r)
+	if dfa.type == "Startpoint" then
+		for k, v in pairs(dfa.reachableBridges) do
+			for l, w in pairs(results) do
+				if v ~= w then
+					table.insert(results, v)
+				end
+			end
+		end
+	end
+	
 	return results
 end
 
