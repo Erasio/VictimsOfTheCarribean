@@ -243,6 +243,7 @@ end
 
 Startpoint = {}
 Startpoint.type = "Startpoint"
+setmetatable(Startpoint, Tile_mt)
 Startpoint.list = {}
 Startpoint.sprite = {}
 Startpoint_mt = {__index = Startpoint}
@@ -269,6 +270,17 @@ end
 function Startpoint:draw()
 	-- TODO draw startpoint
 end
+
+Goalpoint = {}
+Goalpoint.type = "Goalpoint"
+setmetatable(Goalpoint, Tile_mt)
+
+function Goalpoint:new(tile)
+	local newGoalpoint = Island:new(tile, 0)
+
+	return newGoalpoint
+end
+
 
 
 Map = {}
@@ -412,14 +424,7 @@ function Map:new(radius, tileSize)
 	tempStartPoint:addReachableBridge(newMap:getTile(-2, -5))
 	tempStartPoint:addReachableBridge(newMap:getTile(-1, -6))
 
-	local jgds = newMap:getTile(0, -5)
-	jgds:highlight()
-	jgds = newMap:getTile(2, 4)
-	jgds:highlight()
-	jgds = newMap:getTile(3, 3)
-	jgds:highlight()
-
-	print("highlight: ", #Tile.highlighted)
+	Goalpoint:new(newMap:getTile(0, 0))
 
 	return newMap
 end
