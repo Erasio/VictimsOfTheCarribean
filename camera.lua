@@ -40,3 +40,9 @@ function camera:setScale(sx, sy)
   self.scaleX = sx or self.scaleX
   self.scaleY = sy or self.scaleY
 end
+
+function camera:translateScreenSpace(x, y)
+  x = x * self.scaleX + self.x
+  y = y * self.scaleY + self.y
+  return x, y
+end
