@@ -106,7 +106,7 @@ function Player:new(q, r, map, index)
 	newPlayer.portrait = love.graphics.newImage("img/spieler" .. tostring(index) .. "_1.png")
 
 	newPlayer.characters = {}
-	newPlayer.numCharacters = 1
+	newPlayer.numCharacters = 4
 	newPlayer.index = index
 	for i = 1, newPlayer.numCharacters do
 		table.insert(newPlayer.characters, Character:new(q, r, map, index, (200*0.3)/2 + (i-2) * 5, (200*0.3)/2 + (i-2) * 5))
@@ -176,7 +176,7 @@ function Character:new(q, r, map, id, dispX, dispY)
 		CharacterAction:new("Build Bridge", newCharacter, newCharacter.buildBridge, newCharacter.checkBuildBridge),
 		CharacterAction:new("Build wave breaker", newCharacter, newCharacter.buildBreaker, newCharacter.checkBuildBreaker),
 		CharacterAction:new("Walk", newCharacter, newCharacter.walk, newCharacter.checkWalk),
-		CharacterAction:new("Sleep", newCharacter, newCharacter.sleep, nil)
+		CharacterAction:new("Sleep", newCharacter, newCharacter.sleep, newCharacter.checkSleep)
 	}
 
 	return newCharacter
@@ -195,7 +195,7 @@ end
 function Character:getPossibleActions()
 	local results = {}
 	for k, action in pairs(self.actions) do
-		if action.callbackTable.check(callbackTable) then
+		if action.check(action.callbackTable) then
 			table.insert(results, action)
 		end
 	end
@@ -242,7 +242,9 @@ end
 
 function Character:checkBuildBreaker()
 	local tile = self.map:getTile(self.q, self.r)
-	return tile.breakerDirections()
+	if tile.breakerDirections then
+		return tile:breakerDirections()
+	end
 end
 
 function Character:buildBreaker(direction)
@@ -276,6 +278,10 @@ function Character:walk(newQ, newR)
 	self.currentActions = self.currentActions - 1
 	self.q = newQ
 	self.r = newR
+end
+
+function Character:checkSleep()
+	return true
 end
 
 function Character:sleep()
