@@ -184,8 +184,14 @@ function Bridge:new(tile)
 end
 
 function Bridge:draw()
-	if self.active then
-		-- TODO draw bridge
+	if self.highlightBool then
+		love.graphics.setColor(100, 255, 255)
+		love.graphics.circle("fill", self.x, self.y, 20))
+	else
+		love.graphics.setColor(255, 255, 255)
+	end
+	if self.bridgeActive then
+		love.graphics.draw(tileGraphics[4], self.x - 50, self.y - 50, 0, 0.5)
 	end
 end
 
