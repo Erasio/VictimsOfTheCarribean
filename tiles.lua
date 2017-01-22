@@ -1,5 +1,6 @@
 Tile = {}
 Tile.type = "Tile"
+Tile.highlighted = {}
 Tile_mt = {__index = Tile}
 
 function Tile:new(x, y, size, ax, ay)
@@ -28,7 +29,12 @@ function Tile:draw(text)
 	love.graphics.setColor(self.color)
 	love.graphics.draw(self.canvas, self.x - self.size, self.y - self.size)
 	if self.sprite then
-		love.graphics.setColor(255, 255, 255, 255)
+		if self.highlightBool then
+			print("hello?")
+			love.graphics.setColor(100, 255, 255)
+		else
+			love.graphics.setColor(255, 255, 255)
+		end
 		love.graphics.draw(self.sprite, self.x - 50, self.y - 50, 0, 0.5)
 	end
 	if text then
@@ -50,6 +56,18 @@ function Tile:draw(text)
 	-- elseif self.type == "Bridge" then
 	-- 	love.graphics.draw(tileGraphics[4], self.x, self.y0, 0.5)
 	-- end
+end
+
+function Tile:highlight()
+	self.highlightBool = true
+	table.insert(Tile.highlighted, self)
+end
+
+function Tile.unhighlihgtAll()
+	for k, tile in pairs(Tile.highlighted) do
+		tile.highlightBool = nil
+	end
+	Tile.highlighted = {}
 end
 
 function Tile:corner(x, y, size, i)
@@ -172,6 +190,7 @@ function Bridge:draw()
 end
 
 Sandbank = {}
+setmetatable(Sandbank, Tile_mt)
 Sandbank.type = "Sandbank"
 Sandbank.list = {}
 Sandbank.sprite = {}
@@ -204,6 +223,11 @@ function Sandbank:new(tile)
 end
 
 function Sandbank:draw()
+	if self.highlightBool then
+		love.graphics.setColor(100, 255, 255)
+	else
+		love.graphics.setColor(255, 255, 255)
+	end
 	if self.bridgeActive then
 		-- TODO draw bridge
 		love.graphics.draw(tileGraphics[4], self.x - 50, self.y - 50, 0, 0.5)
@@ -387,6 +411,15 @@ function Map:new(radius, tileSize)
 	tempStartPoint:addReachableBridge(newMap:getTile(-3, -4))
 	tempStartPoint:addReachableBridge(newMap:getTile(-2, -5))
 	tempStartPoint:addReachableBridge(newMap:getTile(-1, -6))
+
+	local jgds = newMap:getTile(0, -5)
+	jgds:highlight()
+	jgds = newMap:getTile(2, 4)
+	jgds:highlight()
+	jgds = newMap:getTile(3, 3)
+	jgds:highlight()
+
+	print("highlight: ", #Tile.highlighted)
 
 	return newMap
 end
